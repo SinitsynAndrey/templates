@@ -1,0 +1,200 @@
+[project]
+name = "project-name"
+version = "0.1.0"
+description = "Описание проекта"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.14",
+    "python-dotenv>=1.2.4",
+    "sqlalchemy[asyncio]>=2.1.4",
+]
+
+
+[dependency-groups]
+dev = [
+  "codespell>=2.4",
+  "coverage>=7.6",
+  "mypy>=2.3",
+  "pre-commit>=4.3",
+  "pyproject-fmt>=2.5",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "pytest-xdist>=3.6",
+  "ruff>=0.14.3",
+]
+
+
+[tool.uv]
+package = false
+
+
+[tool.ruff]
+required-version = ">=0.14.3"
+target-version = "py314"
+line-length = 120
+src = [ "app" ]
+include = [
+    "app/**/*.py",
+    "tests/**/*.py",
+    "alembic/**/*.py",
+]
+fix = true
+
+[tool.ruff.lint]
+select = [ "ALL" ]
+ignore = [
+  "ANN002",
+  "ANN003",
+  "ANN204",
+  "ANN401",
+  "COM812",
+  "CPY001",
+  "D",
+  "EXE",
+  "INP",
+  "N818",
+  "PGH",
+  "RUF001",
+  "RUF002",
+  "RUF003",
+  "RUF012",
+  "RUF100",
+  "TC",
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*.py" = [ "ANN401", "ARG001", "ERA001", "PLR2004", "PT017", "S101", "S311" ]
+
+[tool.ruff.lint.flake8-import-conventions]
+banned-from = [ "ast", "datetime" ]
+aliases = { datetime = "dt" }
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+lines-between-types = 1
+section-order = [ "future", "standard-library", "third-party", "first-party", "local-folder" ]
+
+
+[tool.codespell]
+# https://github.com/codespell-project/codespell
+ignore-words-list = [
+  "NotIn",
+  "selectin",
+]
+skip = [
+  "*.lock",
+  ".mypy_cache",
+  "__pycache__",
+  "_build",
+]
+
+
+[tool.pyproject-fmt]
+# https://pyproject-fmt.readthedocs.io/en/latest/configuration.html
+column_width = 120
+generate_python_version_classifiers = false
+table_format = "long"
+sub_table_spacing = "\n"
+separate_root_table = "\n\n"
+
+
+[tool.mypy]
+# https://mypy.readthedocs.io/en/stable/config_file.html
+mypy_path = [ "app" ]
+files = [ "app", "tests" ]
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unreachable = true
+disable_error_code = [
+  "no-any-return",
+  "no-untyped-def",
+  "unused-ignore",
+]
+enable_error_code = [
+  "deprecated",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+]
+strict_equality_for_none = true
+strict = true
+
+
+[tool.pyright]
+venv = ".venv"
+venvPath = "."
+exclude = [ ".venv" ]
+ignore = [ ".venv" ]
+extraPaths = [ "app" ]
+
+
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+pythonpath = [ "app" ]
+python_files = [ "test_*.py" ]
+addopts = "-n auto --dist loadscope --color=yes"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_mode = "auto"
+
+
+[tool.coverage.run]
+source = [ "app" ]
+
+[tool.coverage.report]
+omit = [
+  "*/alembic/*",
+  "*/settings.py",
+  "*/tests/*",
+]
+
+
+[tool.alembic]
+script_location = "alembic"
+file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
+prepend_sys_path = "app"
+version_path_separator = "os"
+
+[tool.alembic.formatters.generic]
+format = "%(levelname)-5.5s [%(name)s] %(message)s"
+datefmt = "%H:%M:%S"
+
+[tool.alembic.handlers.console]
+class = "StreamHandler"
+args = [ "sys.stderr" ]
+level = "NOTSET"
+formatter = "generic"
+
+[tool.alembic.loggers]
+keys = "root,sqlalchemy,alembic"
+
+[tool.alembic.loggers.alembic]
+level = "INFO"
+handlers = []
+qualname = "alembic"
+
+[tool.alembic.loggers.root]
+level = "WARNING"
+handlers = [ "console" ]
+qualname = ""
+
+[tool.alembic.loggers.sqlalchemy]
+level = "WARNING"
+handlers = []
+qualname = "sqlalchemy.engine"
+
+[[tool.alembic.post_write_hooks]]
+name = "ruff-lint"
+type = "exec"
+executable = "ruff"
+options = "check --fix-only REVISION_SCRIPT_FILENAME"
+
+[[tool.alembic.post_write_hooks]]
+name = "ruff-format"
+type = "exec"
+executable = "ruff"
+options = "format REVISION_SCRIPT_FILENAME"
